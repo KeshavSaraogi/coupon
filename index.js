@@ -45,7 +45,7 @@ app.post('/send', async (req, res) => {
 });
 
 
-const PORT = 3000;
+const PORT = 5500;
 app.listen(PORT, () => {
   console.log(`🚀 MSG91 server running at http://localhost:${PORT}`);
 });
