@@ -28,7 +28,7 @@ app.post('/send', async (req, res) => {
       flow_id: process.env.TEMPLATE_ID,
       sender: process.env.SENDER_ID,
       mobiles: `91${phone}`,
-      VAR1: message, // VAR1 is your placeholder in the SMS template
+      VAR1: message,
     }, {
       headers: {
         authkey: process.env.MSG91_AUTH_KEY,
