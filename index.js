@@ -1,51 +1,62 @@
-require('dotenv').config();
 const express = require('express');
-const bodyParser = require('body-parser');
 const axios = require('axios');
+const rewardMap = require('./rewardMap');
+const db = require('./database'); // optional DB logging
 
-const app = express();
-app.use(bodyParser.json());
+const router = express.Router();
 
-// Hardcoded rewards
-const rewardMap = {
-  "ABC123": "🎉 You won ₹20!",
-  "XYZ456": "🎊 You earned 50 points!",
-  "HELLO789": "🎁 You get a surprise gift!",
-};
-
-app.post('/send', async (req, res) => {
-  const { phone, code } = req.body;
-  const reward = rewardMap[code.toUpperCase()];
-
-  if (!reward) {
-    return res.status(400).json({ message: "❌ Invalid code." });
-  }
-
-  const message = `Thanks! ${reward}`;
-
+router.post('/send', async (req, res) => {
   try {
-    await axios.post(`https://control.msg91.com/api/v5/flow/`, {
+    const { phone, code } = req.body;
+
+    // 🔍 Validation
+    if (!phone || !code) {
+      return res.status(400).json({ message: "Phone and code are required." });
+    }
+
+    const upperCode = code.trim().toUpperCase();
+    const reward = rewardMap[upperCode];
+
+    if (!reward) {
+      return res.status(400).json({ message: "❌ Invalid code." });
+    }
+
+    const message = `Thanks! ${reward}`;
+    const mobile = `91${phone}`;
+
+    // 💾 Optional: Save to database
+    db.prepare(`
+      INSERT INTO redemptions (phone, code, reward, timestamp, status)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
+      phone,
+      upperCode,
+      reward,
+      new Date().toISOString(),
+      'sent'
+    );
+
+    const payload = {
       flow_id: process.env.TEMPLATE_ID,
       sender: process.env.SENDER_ID,
-      mobiles: `91${phone}`,
-      VAR1: message,
-    }, {
-      headers: {
-        authkey: process.env.MSG91_AUTH_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
+      mobiles: mobile,
+      VAR1: message
+    };
 
-    console.log(`✅ SMS sent to ${phone}: ${message}`);
-    res.status(200).json({ message: "SMS sent successfully!" });
+    const headers = {
+      authkey: process.env.MSG91_AUTH_KEY,
+      'Content-Type': 'application/json'
+    };
+
+    await axios.post('https://control.msg91.com/api/v5/flow/', payload, { headers });
+
+    console.log(`✅ SMS sent to ${phone}: ${reward}`);
+    return res.status(200).json({ message: "SMS sent successfully!" });
+
   } catch (err) {
-    console.error("❌ SMS Error:", err.response?.data || err.message);
-    res.status(500).json({ message: "Failed to send SMS." });
+    console.error("❌ Error:", err.response?.data || err.message);
+    return res.status(500).json({ message: "Internal server error." });
   }
 });
 
-
-const PORT = 5500;
-app.listen(PORT, () => {
-  console.log(`🚀 MSG91 server running at http://localhost:${PORT}`);
-});
+module.exports = router;
