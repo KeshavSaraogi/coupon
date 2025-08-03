@@ -3,33 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Admin – Redemptions</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 30px;
-      background-color: #f9fafb;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ccc;
-      text-align: left;
-    }
-    th {
-      background-color: #4f46e5;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f1f5f9;
-    }
-    h1 {
-      margin-bottom: 0;
-    }
-  </style>
+  <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
   <h1>📋 Redemption Log</h1>
@@ -47,4 +21,10 @@
       </tr>
     </thead>
     <tbody id="tableBody">
-      <tr><td co
+      <tr><td colspan="6">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <script src="admin.js"></script>
+</body>
+</html>
